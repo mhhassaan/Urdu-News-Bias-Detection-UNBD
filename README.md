@@ -1,4 +1,4 @@
-# UNBD — Urdu News Bias Detection System
+# UNBD - Urdu News Bias Detection System
 ### *Final Year Research Project & Interactive Explainable AI (XAI) Prototype*
 
 Welcome to **UNBD**, an advanced, hybrid machine learning framework and web application built to detect, visualize, and explain political and editorial bias in Urdu news articles. 
