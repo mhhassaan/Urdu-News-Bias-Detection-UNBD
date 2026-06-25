@@ -1,0 +1,23 @@
+===== PIPELINE_T_LABSE_BILSTM_SVM =====
+
+Total Features: 512
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10]}
+
+Best Parameters:
+C: 0.01
+
+Best CV F1 (macro): 0.8154
+CV Accuracy: 0.8156
+Final Accuracy (5-Fold CV): 0.8156
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.82      0.82      0.82      5159
+      Biased       0.81      0.81      0.81      4841
+
+    accuracy                           0.82     10000
+   macro avg       0.82      0.82      0.82     10000
+weighted avg       0.82      0.82      0.82     10000

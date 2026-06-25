@@ -1,0 +1,130 @@
+--- PIPELINE A: TUNED NAIVE BAYES ---
+Best Parameters: {'alpha': 1.0}
+Best CV Accuracy: 73.38%
+
+Classification Report (10-Fold CV Aggregated):
+              precision    recall  f1-score   support
+
+    Unbiased       0.73      0.75      0.74       800
+      Biased       0.74      0.72      0.73       800
+
+    accuracy                           0.73      1600
+   macro avg       0.73      0.73      0.73      1600
+weighted avg       0.73      0.73      0.73      1600
+
+
+
+--- PIPELINE B: TUNED LOGISTIC REGRESSION ---
+Best Parameters: {'C': 1, 'penalty': 'l2', 'solver': 'liblinear'}
+Best CV Accuracy: 73.56%
+
+Classification Report (10-Fold CV Aggregated):
+              precision    recall  f1-score   support
+
+    Unbiased       0.72      0.77      0.74       800
+      Biased       0.75      0.70      0.73       800
+
+    accuracy                           0.74      1600
+   macro avg       0.74      0.74      0.74      1600
+weighted avg       0.74      0.74      0.74      1600
+
+
+
+--- PIPELINE C: TUNED RANDOM FOREST ---
+Best Parameters: {'max_depth': None, 'min_samples_split': 5, 'n_estimators': 200}
+Best CV Accuracy: 72.44%
+
+Classification Report (10-Fold CV Aggregated):
+              precision    recall  f1-score   support
+
+    Unbiased       0.69      0.80      0.74       800
+      Biased       0.76      0.65      0.70       800
+
+    accuracy                           0.72      1600
+   macro avg       0.73      0.72      0.72      1600
+weighted avg       0.73      0.72      0.72      1600
+
+
+--- PIPELINE D: TUNED SVM ---
+Best Parameters: {'C': 1, 'gamma': 'scale', 'kernel': 'rbf'}
+Best CV Accuracy: 74.06%
+
+Classification Report (10-Fold CV Aggregated):
+              precision    recall  f1-score   support
+
+    Unbiased       0.72      0.79      0.75       800
+      Biased       0.77      0.69      0.73       800
+
+    accuracy                           0.74      1600
+   macro avg       0.74      0.74      0.74      1600
+weighted avg       0.74      0.74      0.74      1600
+
+========================================
+   PIPELINE E: LaBSE + Tuned SVM
+========================================
+Running Grid Search (This may take 2-3 mins)...
+Best Parameters: {'C': 10, 'gamma': 'scale', 'kernel': 'rbf'}
+Best CV Accuracy: 76.38%
+
+Classification Report (LaBSE + SVM):
+              precision    recall  f1-score   support
+
+    Unbiased       0.76      0.77      0.76       800
+      Biased       0.77      0.76      0.76       800
+
+    accuracy                           0.76      1600
+   macro avg       0.76      0.76      0.76      1600
+weighted avg       0.76      0.76      0.76      1600
+
+========================================
+   PIPELINE F: LaBSE + Tuned LogReg
+========================================
+Best Parameters: {'C': 0.1, 'solver': 'liblinear'}
+Best CV Accuracy: 76.12%
+
+Classification Report (LaBSE + LogReg):
+              precision    recall  f1-score   support
+
+    Unbiased       0.76      0.77      0.76       800
+      Biased       0.76      0.76      0.76       800
+
+    accuracy                           0.76      1600
+   macro avg       0.76      0.76      0.76      1600
+weighted avg       0.76      0.76      0.76      1600
+
+========================================
+   PIPELINE G: RoBERTa + Tuned SVM
+========================================
+Running Grid Search (This may take 2-3 mins)...
+Best Parameters: {'C': 100, 'gamma': 'scale', 'kernel': 'rbf'}
+Best CV Accuracy: 74.94%
+
+Classification Report (RoBERTa + SVM):
+              precision    recall  f1-score   support
+
+    Unbiased       0.74      0.77      0.76       800
+      Biased       0.76      0.73      0.74       800
+
+    accuracy                           0.75      1600
+   macro avg       0.75      0.75      0.75      1600
+weighted avg       0.75      0.75      0.75      1600
+
+   PIPELINE H: RoBERTa + Tuned LogReg
+========================================
+Best Parameters: {'C': 10, 'solver': 'liblinear'}
+Best CV Accuracy: 74.94%
+
+Classification Report (RoBERTa + LogReg):
+              precision    recall  f1-score   support
+
+    Unbiased       0.75      0.74      0.75       800
+      Biased       0.75      0.75      0.75       800
+
+    accuracy                           0.75      1600
+   macro avg       0.75      0.75      0.75      1600
+weighted avg       0.75      0.75      0.75      1600
+
+
+
+
+

@@ -1,0 +1,13 @@
+{
+  "artifact_version": "legacy-1.0",
+  "runtime_compatibility": "approximate",
+  "labse_tokenizer": "setu4993/LaBSE",
+  "labse_model": "sentence-transformers/LaBSE",
+  "labse_max_length": 128,
+  "labse_pooling": "legacy_unmasked_mean",
+  "labse_model_eval": true,
+  "probability_calibrated": false,
+  "evaluation_unit": "article",
+  "sentence_level_metrics_available": false,
+  "warning": "Legacy LaBSE training embeddings were generated with dropout enabled and an unmasked mean over dynamically padded batches. Single-article inference cannot reproduce those features exactly. Regenerate deterministic embeddings and retrain with train_final_model.py before treating predictions as deployment-valid."
+}

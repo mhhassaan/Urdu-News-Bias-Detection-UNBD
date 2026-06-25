@@ -1,0 +1,25 @@
+===== PIPELINE_O_LABSE_LSTM_LR =====
+
+Total Features: 256
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10], 'solver': ['liblinear'], 'penalty': ['l2']}
+
+Best Parameters:
+C: 0.01
+penalty: l2
+solver: liblinear
+
+Best CV F1 (macro): 0.9939
+CV Accuracy: 0.8068
+Final Accuracy (5-Fold CV): 0.8068
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.81      0.82      0.81      5159
+      Biased       0.80      0.80      0.80      4841
+
+    accuracy                           0.81     10000
+   macro avg       0.81      0.81      0.81     10000
+weighted avg       0.81      0.81      0.81     10000

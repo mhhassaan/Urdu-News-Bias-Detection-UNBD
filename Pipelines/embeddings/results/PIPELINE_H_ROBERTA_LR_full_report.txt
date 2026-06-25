@@ -1,0 +1,25 @@
+===== PIPELINE_H_ROBERTA_LR =====
+
+Loading saved RoBERTa embeddings...
+Embedding Shape: (10000, 768)
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10], 'solver': ['liblinear', 'lbfgs'], 'penalty': ['l2']}
+Best Parameters:
+C: 10
+penalty: l2
+solver: liblinear
+
+Best CV F1 (macro): 0.8234
+CV Accuracy: 0.8239
+Final Accuracy (5-Fold CV): 0.8239
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.82      0.85      0.83      5159
+      Biased       0.83      0.80      0.81      4841
+
+    accuracy                           0.82     10000
+   macro avg       0.82      0.82      0.82     10000
+weighted avg       0.82      0.82      0.82     10000

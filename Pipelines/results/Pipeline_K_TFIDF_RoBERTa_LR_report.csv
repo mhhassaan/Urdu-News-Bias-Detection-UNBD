@@ -1,0 +1,22 @@
+,precision,recall,f1-score,support
+0,0.8044563964656166,0.8117852296956775,0.8081041968162084,5159.0
+1,0.7974551522736755,0.7897128692418922,0.7935651271406331,4841.0
+accuracy,0.8011,0.8011,0.8011,0.8011
+macro avg,0.800955774369646,0.8007490494687848,0.8008346619784208,10000.0
+weighted avg,0.8010670941522979,0.8011,0.8010658331862623,10000.0
+
+📊 Pipeline_K_TFIDF_RoBERTa_LR DONE | Acc=0.8011 | Time=15.85 min
+
+Best Parameters:
+{'C': 0.01}
+
+Classification Report:
+
+              precision    recall  f1-score   support
+
+      Biased       0.80      0.81      0.81      5159
+    Unbiased       0.80      0.79      0.79      4841
+
+    accuracy                           0.80     10000
+   macro avg       0.80      0.80      0.80     10000
+weighted avg       0.80      0.80      0.80     10000

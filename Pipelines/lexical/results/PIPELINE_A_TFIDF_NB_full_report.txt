@@ -1,0 +1,20 @@
+===== PIPELINE_A_TFIDF_NB =====
+
+Best Parameters:
+nb__alpha: 0.5
+tfidf__max_features: 8000
+tfidf__ngram_range: (1, 1)
+
+Best CV F1 (macro): 0.7903
+CV Accuracy: 0.7912
+Final Accuracy (5-Fold CV): 0.7912
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.78      0.83      0.80      5159
+      Biased       0.81      0.75      0.78      4841
+
+    accuracy                           0.79     10000
+   macro avg       0.79      0.79      0.79     10000
+weighted avg       0.79      0.79      0.79     10000

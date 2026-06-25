@@ -1,0 +1,22 @@
+,precision,recall,f1-score,support
+0,0.7835514748974409,0.7774762550881954,0.780502043199066,5159.0
+1,0.7648022946117599,0.771121669076637,0.7679489816910101,4841.0
+accuracy,0.7744,0.7744,0.7744,0.7744
+macro avg,0.7741768847546004,0.7742989620824162,0.7742255124450381,10000.0
+weighted avg,0.7744749967211427,0.7744,0.7744251061230161,10000.0
+
+📊 Pipeline_J_TFIDF_LaBSE_SVM DONE | Acc=0.7744 | Time=28.02 min
+
+Best Parameters:
+{'C': 0.01}
+
+Classification Report:
+
+              precision    recall  f1-score   support
+
+      Biased       0.78      0.78      0.78      5159
+    Unbiased       0.76      0.77      0.77      4841
+
+    accuracy                           0.77     10000
+   macro avg       0.77      0.77      0.77     10000
+weighted avg       0.77      0.77      0.77     10000

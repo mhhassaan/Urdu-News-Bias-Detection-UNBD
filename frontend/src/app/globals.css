@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f4f0e7;
+  --foreground: #171713;
+  --wired-black: #000000;
+  --link-blue: #057dbc;
+  --hairline: #e2e8f0;
+  --caption-gray: #757575;
+  --font-inter: "Inter", "Aptos", "Segoe UI", Arial, sans-serif;
+  --font-playfair: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-lora: "Lora", Georgia, "Times New Roman", serif;
+  --font-mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+  --font-noto-nastaliq-urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Nafees Nastaleeq", serif;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-wired-black: var(--wired-black);
+  --color-link-blue: var(--link-blue);
+  --color-hairline: var(--hairline);
+  --color-caption-gray: var(--caption-gray);
+
+  --font-inter: var(--font-inter);
+  --font-playfair: var(--font-playfair);
+  --font-lora: var(--font-lora);
+  --font-mono: var(--font-mono);
+  --font-urdu: var(--font-noto-nastaliq-urdu);
+}
+
+/* WIRED Style Base Overrides */
+* {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Circular elements exception */
+.rounded-full {
+  border-radius: 9999px !important;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-lora), serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: #f3c546;
+  color: #171713;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-playfair), serif;
+  color: var(--wired-black);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.hairline-rule {
+  border-bottom: 1px solid var(--wired-black);
+}
+
+.hairline-soft {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.paper-grid {
+  background-image:
+    linear-gradient(rgba(23, 23, 19, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(23, 23, 19, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(to right, black, transparent 82%);
+}
+
+button,
+summary,
+input,
+textarea {
+  touch-action: manipulation;
+}
+
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid #db2b19;
+  outline-offset: 3px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}

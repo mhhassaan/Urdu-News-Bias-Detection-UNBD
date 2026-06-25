@@ -1,0 +1,7 @@
+Model,Precision,Recall,F1-Score,Accuracy
+GPT Few-Shot,0.5822,0.5578,0.5201,0.5578
+Grok Few-Shot,0.5819,0.5756,0.5662,0.5756
+GPT Zero-Shot,0.8682,0.8557,0.8544,0.8557
+Grok Zero-Shot,0.5835,0.5792,0.5733,0.5792
+Gemini Zero-Shot,0.72,0.57,0.49,0.57
+Gemini Few-Shot,0.61,0.55,0.48,0.55

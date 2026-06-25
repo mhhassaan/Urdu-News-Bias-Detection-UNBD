@@ -1,0 +1,62 @@
+{
+  "artifact_version": "2.0.0",
+  "runtime_compatibility": "exact",
+  "labse_tokenizer": "setu4993/LaBSE",
+  "labse_model": "sentence-transformers/LaBSE",
+  "labse_weights_note": "sentence-transformers/LaBSE and setu4993/LaBSE cached model weights were SHA-256 identical during the 2026-06-19 audit.",
+  "labse_max_length": 128,
+  "labse_pooling": "attention_mask_mean",
+  "labse_model_eval": true,
+  "tfidf_max_features": 3000,
+  "tfidf_ngram_range": [
+    1,
+    2
+  ],
+  "scaler": "StandardScaler",
+  "classifier": "LogisticRegression",
+  "classifier_parameters": {
+    "lr__C": 0.01,
+    "lr__solver": "lbfgs"
+  },
+  "evaluation": {
+    "accuracy": 0.8025,
+    "macro_f1": 0.8022068210605169,
+    "classification_report": {
+      "0": {
+        "precision": 0.8046306926903942,
+        "recall": 0.8150804419461136,
+        "f1-score": 0.809821858449687,
+        "support": 5159.0
+      },
+      "1": {
+        "precision": 0.8001675743611227,
+        "recall": 0.789093162569717,
+        "f1-score": 0.7945917836713469,
+        "support": 4841.0
+      },
+      "accuracy": 0.8025,
+      "macro avg": {
+        "precision": 0.8023991335257585,
+        "recall": 0.8020868022579153,
+        "f1-score": 0.8022068210605169,
+        "support": 10000.0
+      },
+      "weighted avg": {
+        "precision": 0.802470097107194,
+        "recall": 0.8025,
+        "f1-score": 0.8024489792494925,
+        "support": 10000.0
+      }
+    },
+    "outer_folds": 5,
+    "inner_folds": 3,
+    "out_of_fold_predictions": true
+  },
+  "evaluation_unit": "article",
+  "sentence_level_metrics_available": false,
+  "probability_calibrated": false,
+  "training_rows": 10000,
+  "training_text_sha256": "b835145c31d08d19dc4d0e91dc9cfc5c08d74f0eb2a9e7fb388bb83693641132",
+  "background_rows": 100,
+  "background_sampling": "stratified_random"
+}

@@ -1,0 +1,23 @@
+===== PIPELINE_P_LABSE_LSTM_SVM =====
+
+Total Features: 256
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10]}
+
+Best Parameters:
+C: 0.01
+
+Best CV F1 (macro): 0.9927
+CV Accuracy: 0.8081
+Final Accuracy (5-Fold CV): 0.8081
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.81      0.81      0.81      5159
+      Biased       0.80      0.80      0.80      4841
+
+    accuracy                           0.81     10000
+   macro avg       0.81      0.81      0.81     10000
+weighted avg       0.81      0.81      0.81     10000

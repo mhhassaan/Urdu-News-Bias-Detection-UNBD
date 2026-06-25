@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bias Detection in Urdu News | Single-File Scrollytelling</title>
+  <style>
+    :root {
+      --bg: #10110f;
+      --fg: #f6f1e6;
+      --surface: rgba(23, 24, 21, 0.84);
+      --visual: #11120f;
+      --soft: rgba(246, 241, 230, 0.14);
+      --muted: #a8a29e;
+      --dim: #78716c;
+      --paper: #f6f1e6;
+      --ink: #10110f;
+      --gold: #f7c95f;
+      --mint: #52d6b3;
+      --coral: #ff6b57;
+      --sky: #7ac7ff;
+      --violet: #b08cff;
+      --lime: #d6f279;
+      --font-sans: Aptos, "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+      --font-serif: Georgia, "Times New Roman", serif;
+      --font-mono: "Cascadia Mono", Consolas, monospace;
+      --font-urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Nafees Nastaleeq", serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    body.light {
+      --bg: #f8f5ed;
+      --fg: #10110f;
+      --surface: rgba(255, 255, 255, 0.88);
+      --visual: #fffaf0;
+      --soft: rgba(16, 17, 15, 0.15);
+      --muted: #57534e;
+      --dim: #78716c;
+      --paper: #11120f;
+      --ink: #f8f5ed;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .theme-toggle {
+      position: fixed;
+      z-index: 50;
+      left: 1.25rem;
+      top: 1.25rem;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.75rem;
+      align-items: center;
+      border: 1px solid var(--soft);
+      background: color-mix(in srgb, var(--surface) 78%, transparent);
+      color: var(--fg);
+      padding: 0.65rem 0.8rem;
+      font-size: 0.65rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      backdrop-filter: blur(16px);
+      cursor: pointer;
+      transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease;
+    }
+
+    .theme-toggle:hover { transform: translateY(-2px); }
+
+    .switch-track {
+      position: relative;
+      width: 2.6rem;
+      height: 1.25rem;
+      border: 1px solid var(--soft);
+      background: var(--ink);
+      display: block;
+    }
+
+    .switch-knob {
+      position: absolute;
+      left: 0.25rem;
+      top: 50%;
+      width: 0.72rem;
+      height: 0.72rem;
+      background: var(--fg);
+      transform: translateY(-50%);
+      transition: left 0.3s ease;
+    }
+
+    body.light .switch-knob { left: 1.55rem; }
+
+    .noise-mask {
+      position: absolute;
+      inset: 0;
+      opacity: 0.4;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+      background-size: 18px 18px;
+      mask-image: radial-gradient(circle at center, black, transparent 78%);
+    }
+
+    body.light .noise-mask { opacity: 0.24; filter: invert(1); }
+
+    .hero {
+      position: relative;
+      min-height: 92vh;
+      padding: 2rem clamp(1.25rem, 4vw, 3.5rem);
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 28% 22%, rgba(247, 201, 95, 0.18), transparent 28%),
+        radial-gradient(circle at 78% 64%, rgba(82, 214, 179, 0.14), transparent 32%),
+        linear-gradient(145deg, #10110f 0%, #181613 48%, #0c0d0c 100%);
+      transition: background 0.45s ease;
+    }
+
+    body.light .hero-bg {
+      background:
+        radial-gradient(circle at 24% 18%, rgba(247, 201, 95, 0.32), transparent 28%),
+        radial-gradient(circle at 78% 64%, rgba(82, 214, 179, 0.22), transparent 34%),
+        linear-gradient(145deg, #fffaf0 0%, #f8f5ed 48%, #ede7da 100%);
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      min-height: calc(92vh - 4rem);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .topline, .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      border-color: var(--soft);
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.26em;
+    }
+
+    .topline { border-bottom: 1px solid var(--soft); padding-bottom: 1.25rem; padding-left: 9.5rem; }
+    .hero-stats { border-top: 1px solid var(--soft); padding-top: 1.25rem; display: grid; grid-template-columns: repeat(3, 1fr); }
+
+    .hero-copy { max-width: 72rem; padding: 7rem 0 11vh; }
+
+    .eyebrow {
+      color: var(--gold);
+      margin: 0 0 1.5rem;
+      font-size: 0.85rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.32em;
+    }
+
+    h1, h2, h3 { font-family: var(--font-serif); margin: 0; }
+
+    h1 {
+      max-width: 62rem;
+      font-size: clamp(4rem, 10vw, 10rem);
+      line-height: 0.82;
+      letter-spacing: -0.035em;
+      color: var(--fg);
+    }
+
+    .hero-copy p {
+      max-width: 50rem;
+      color: var(--muted);
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      line-height: 1.45;
+      margin: 2rem 0 0;
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      color: var(--fg);
+      letter-spacing: -0.03em;
+    }
+
+    .progress-nav {
+      position: fixed;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 40;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+    }
+
+    .progress-nav a {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+
+    .progress-nav span:first-child {
+      max-width: 0;
+      opacity: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      color: var(--muted);
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      transition: all 0.25s ease;
+    }
+
+    .progress-nav a:hover span:first-child { max-width: 14rem; opacity: 1; }
+
+    .progress-mark {
+      width: 3px;
+      height: 2rem;
+      background: var(--soft);
+      transform: scaleY(0.72);
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+
+    .scrolly {
+      position: relative;
+      display: grid;
+      grid-template-columns: minmax(0, 0.88fr) minmax(520px, 1.12fr);
+    }
+
+    .story-column {
+      padding: 0 clamp(1.25rem, 4vw, 3.5rem);
+    }
+
+    .story-wrap { max-width: 42rem; margin: 0 auto; }
+
+    .story-step {
+      min-height: 170vh;
+      display: flex;
+      align-items: center;
+      padding: 6rem 0;
+      scroll-margin-top: 4rem;
+    }
+
+    .story-card {
+      position: relative;
+      width: 100%;
+      border: 1px solid var(--soft);
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      padding: clamp(1.5rem, 4vw, 2rem);
+      transform: translateY(2rem);
+      opacity: 0.55;
+      transition: opacity 0.7s ease, transform 0.7s ease, background 0.4s ease;
+    }
+
+    .story-step.active .story-card { transform: translateY(0); opacity: 1; }
+
+    .story-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--active-accent, var(--gold));
+    }
+
+    .chapter-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      color: var(--dim);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+    }
+
+    .chapter-row span:last-child {
+      flex: 1;
+      height: 1px;
+      background: var(--active-accent, var(--soft));
+      opacity: 0.7;
+    }
+
+    .kicker {
+      color: var(--active-accent, var(--gold));
+      font-size: 0.82rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      margin: 0;
+    }
+
+    .story-card h2 {
+      margin-top: 1rem;
+      color: var(--fg);
+      font-size: clamp(2.4rem, 5vw, 3.5rem);
+      line-height: 0.96;
+      letter-spacing: -0.03em;
+    }
+
+    .story-card .body {
+      margin-top: 1.75rem;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.75;
+    }
+
+    .metric-block {
+      display: grid;
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: 1rem;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--soft);
+    }
+
+    .metric-block strong {
+      display: block;
+      color: var(--active-accent, var(--gold));
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .metric-block span {
+      display: block;
+      margin-top: 0.5rem;
+      color: var(--dim);
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .metric-block p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .source {
+      color: var(--dim);
+      margin-top: 1.7rem;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+    }
+
+    .visual-column { z-index: 20; }
+
+    .sticky-visual {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      border-left: 1px solid var(--soft);
+      border-right: 1px solid var(--soft);
+      background: var(--visual);
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    .visual-glow {
+      position: absolute;
+      inset: 0;
+      opacity: 0.25;
+      background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--active-accent) 28%, transparent), transparent 42%);
+      transition: background 0.45s ease;
+    }
+
+    .visual-inner {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .visual-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .visual-head p {
+      margin: 0;
+      color: var(--dim);
+      font-size: 0.68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.28em;
+    }
+
+    .visual-head h3 {
+      margin-top: 0.55rem;
+      color: var(--fg);
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 0.95;
+    }
+
+    .chapter-badge {
+      flex: 0 0 auto;
+      width: 3.6rem;
+      height: 3.6rem;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--active-accent, var(--gold));
+      color: var(--active-accent, var(--gold));
+      font-weight: 900;
+    }
+
+    .visual-stage {
+      min-height: 0;
+      flex: 1;
+      display: grid;
+      align-items: center;
+      animation: visualEnter 640ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    .visual-foot {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 1rem;
+      align-items: center;
+      color: var(--dim);
+      font-size: 0.75rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .visual-foot span:first-child { color: var(--active-accent, var(--gold)); }
+    .visual-foot span:last-child { height: 1px; background: var(--soft); }
+
+    svg { max-width: 100%; height: auto; }
+
+    .pulse-dot {
+      animation: pulseDot 2200ms ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    .chart-card {
+      border: 1px solid var(--soft);
+      background: color-mix(in srgb, var(--surface) 86%, transparent);
+      padding: 1.25rem;
+    }
+
+    .data-card { border: 1px solid var(--soft); background: color-mix(in srgb, var(--fg) 7%, transparent); padding: 1rem; }
+    .big-number { font-family: var(--font-serif); color: var(--fg); font-size: clamp(2rem, 4vw, 3.6rem); font-weight: 900; line-height: 1; }
+    .tiny-label { color: var(--dim); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.16em; font-weight: 900; }
+
+    .bar-bg { background: color-mix(in srgb, var(--fg) 9%, transparent); overflow: hidden; }
+    .bar-grow { width: 0; animation: growBar 900ms cubic-bezier(0.19, 1, 0.22, 1) forwards; animation-delay: var(--delay, 0ms); }
+    .row-reveal { opacity: 0; transform: translateY(10px); animation: tableRowReveal 560ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: var(--delay, 0ms); }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.85rem; }
+
+    .urdu { font-family: var(--font-urdu); direction: rtl; }
+
+    .deep-dive {
+      border-top: 1px solid var(--soft);
+      border-bottom: 1px solid var(--soft);
+      padding: 5rem clamp(1.25rem, 4vw, 3.5rem);
+      background:
+        radial-gradient(circle at 8% 0%, rgba(247, 201, 95, 0.18), transparent 32%),
+        radial-gradient(circle at 92% 24%, rgba(122, 199, 255, 0.12), transparent 34%),
+        var(--bg);
+    }
+
+    .section-copy {
+      max-width: 80rem;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 0.7fr 1.3fr;
+      align-items: end;
+      gap: 2rem;
+    }
+
+    .section-copy h2 {
+      color: var(--fg);
+      font-size: clamp(3rem, 6vw, 5rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      margin-top: 1rem;
+    }
+
+    .section-copy p:last-child {
+      color: var(--muted);
+      font-size: 1.15rem;
+      line-height: 1.65;
+      margin: 0;
+    }
+
+    .appendix-grid {
+      max-width: 80rem;
+      margin: 3rem auto 0;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 1.25rem;
+    }
+
+    .appendix-grid.second { grid-template-columns: 0.95fr 1.05fr; margin-top: 1.25rem; }
+
+    .chart-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1.5rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .chart-title-row h3, .chart-card h3 {
+      color: var(--fg);
+      font-size: clamp(1.8rem, 3vw, 2.35rem);
+      line-height: 1;
+      letter-spacing: -0.03em;
+      margin-top: 0.55rem;
+    }
+
+    .data-table {
+      border: 1px solid var(--soft);
+      overflow: hidden;
+      margin-top: 1.75rem;
+    }
+
+    .table-row, .table-head {
+      display: grid;
+      gap: 1rem;
+      align-items: center;
+      padding: 0.9rem 1rem;
+      border-top: 1px solid var(--soft);
+      color: var(--muted);
+    }
+
+    .table-head {
+      border-top: 0;
+      background: color-mix(in srgb, var(--fg) 8%, transparent);
+      color: var(--dim);
+      font-size: 0.64rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
+    .table-row strong { color: var(--fg); }
+    .right { text-align: right; }
+
+    .ledger {
+      background: var(--paper);
+      color: var(--ink);
+      padding: 5rem clamp(1.25rem, 4vw, 3.5rem);
+    }
+
+    .ledger-inner { max-width: 72rem; margin: 0 auto; }
+    .ledger h2 { max-width: 52rem; font-size: clamp(2.8rem, 5vw, 4.5rem); line-height: 0.95; letter-spacing: -0.04em; margin-top: 1rem; }
+    .ledger-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 3rem; }
+    .ledger-card { border: 1px solid color-mix(in srgb, var(--ink) 22%, transparent); background: color-mix(in srgb, var(--paper) 82%, transparent); padding: 1.25rem; }
+    .ledger-card h3 { font-size: 1.6rem; }
+    .ledger-line { display: flex; justify-content: space-between; gap: 1rem; padding: 0.8rem 0; border-top: 1px solid color-mix(in srgb, var(--ink) 14%, transparent); font-size: 0.92rem; }
+    .ledger-line:first-of-type { margin-top: 1rem; }
+    .ledger-line span:first-child { opacity: 0.72; }
+    .ledger-line span:last-child { font-weight: 900; }
+
+    @keyframes visualEnter {
+      from { opacity: 0; transform: translateY(16px) scale(0.98); filter: blur(10px); }
+      to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.18; transform: scale(0.82); }
+      50% { opacity: 0.92; transform: scale(1.18); }
+    }
+
+    @keyframes growBar {
+      from { width: 0; }
+      to { width: var(--bar-width, 100%); }
+    }
+
+    @keyframes tableRowReveal {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 980px) {
+      .progress-nav { display: none; }
+      .scrolly { display: flex; flex-direction: column-reverse; }
+      .sticky-visual { position: sticky; top: 0; height: 48vh; border-top: 1px solid var(--soft); border-bottom: 1px solid var(--soft); }
+      .story-step { min-height: 135vh; }
+      .hero-stats, .section-copy, .appendix-grid, .appendix-grid.second, .ledger-grid { grid-template-columns: 1fr; }
+      .visual-head h3 { font-size: 1.7rem; }
+      .metric-block { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .hero { padding-top: 5.5rem; }
+      .theme-toggle { left: 1rem; top: 1rem; }
+      .topline { padding-left: 0; }
+      .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .story-card h2 { font-size: 2.35rem; }
+      .story-card .body { font-size: 1rem; }
+      .table-row, .table-head { grid-template-columns: 1fr !important; text-align: left; }
+      .right { text-align: left; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch to white theme">
+    <span class="switch-track"><span class="switch-knob"></span></span>
+    <span id="themeLabel">Black</span>
+  </button>
+
+  <header class="hero">
+    <div class="hero-bg"></div>
+    <div class="noise-mask"></div>
+    <div class="hero-inner">
+      <div class="topline">
+        <span>COMSATS University Islamabad, Lahore Campus</span>
+        <span>Research & Development</span>
+      </div>
+      <div class="hero-copy">
+        <p class="eyebrow">Scientific paper as interactive narrative</p>
+        <h1>Bias Detection in Urdu News</h1>
+        <p>A guided tour through the paper's corpus, annotation logic, model experiments, and central finding: domain-trained hybrid models understand Urdu political framing far better than general-purpose LLM prompting.</p>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>10,000</strong><span>final Urdu news instances</span></div>
+        <div class="hero-stat"><strong>83.48%</strong><span>best reported model accuracy</span></div>
+        <div class="hero-stat"><strong>57.92%</strong><span>best zero-shot LLM accuracy</span></div>
+      </div>
+    </div>
+  </header>
+
+  <nav id="progressNav" class="progress-nav" aria-label="Story sections"></nav>
+
+  <main class="scrolly">
+    <div class="story-column">
+      <div id="storyWrap" class="story-wrap"></div>
+    </div>
+    <aside class="visual-column">
+      <div id="stickyVisual" class="sticky-visual">
+        <div class="visual-glow"></div>
+        <div class="noise-mask"></div>
+        <div class="visual-inner">
+          <div class="visual-head">
+            <div>
+              <p>Active visual</p>
+              <h3 id="visualTitle">The Missing Instrument</h3>
+            </div>
+            <div id="visualChapter" class="chapter-badge">01</div>
+          </div>
+          <div id="visualStage" class="visual-stage"></div>
+          <div class="visual-foot">
+            <span id="visualMetric">3</span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <section class="deep-dive">
+    <div class="section-copy">
+      <div>
+        <p class="eyebrow">Graph appendix</p>
+        <h2>More evidence, less prose.</h2>
+      </div>
+      <p>These compact charts expose the paper's supporting evidence: how pipeline families compare, how neural variants cluster, what stopword removal did, and how the annotation taxonomy is distributed.</p>
+    </div>
+    <div class="appendix-grid">
+      <article class="chart-card" id="familyChart"></article>
+      <article class="chart-card" id="subtypeTable"></article>
+    </div>
+    <div class="appendix-grid second">
+      <article class="chart-card" id="neuralChart"></article>
+      <article class="chart-card" id="stopwordTable"></article>
+    </div>
+  </section>
+
+  <section class="ledger">
+    <div class="ledger-inner">
+      <p class="eyebrow">Extracted data ledger</p>
+      <h2>Every number in the story is pulled from the paper's tables and results sections.</h2>
+      <div class="ledger-grid">
+        <div class="ledger-card">
+          <h3>Corpus</h3>
+          <div class="ledger-line"><span>Final instances</span><span>10,000</span></div>
+          <div class="ledger-line"><span>Unbiased / Biased</span><span>5,159 / 4,841</span></div>
+          <div class="ledger-line"><span>Total words</span><span>282,283</span></div>
+          <div class="ledger-line"><span>Vocabulary size</span><span>20,068</span></div>
+        </div>
+        <div class="ledger-card">
+          <h3>Best Models</h3>
+          <div class="ledger-line"><span>D: Lexical</span><span>80.00%</span></div>
+          <div class="ledger-line"><span>E: Embedding</span><span>83.23%</span></div>
+          <div class="ledger-line"><span>I: Hybrid</span><span>83.48%</span></div>
+          <div class="ledger-line"><span>R: Neural</span><span>82.22%</span></div>
+        </div>
+        <div class="ledger-card">
+          <h3>LLM Benchmarks</h3>
+          <div class="ledger-line"><span>Best zero-shot</span><span>Grok, 57.92%</span></div>
+          <div class="ledger-line"><span>Best few-shot</span><span>Grok, 57.56%</span></div>
+          <div class="ledger-line"><span>Few-shot examples</span><span>50 balanced</span></div>
+          <div class="ledger-line"><span>Zero-shot test</span><span>500 balanced</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const fmt = new Intl.NumberFormat("en-US");
+
+    const datasetScale = [
+      { label: "Previous dataset", instances: 1600, words: 22520, vocabulary: 5921, biased: 800, unbiased: 800, avgLength: 14.08 },
+      { label: "Current dataset", instances: 10000, words: 282283, vocabulary: 20068, biased: 4841, unbiased: 5159, avgLength: 39.59 },
+    ];
+
+    const collectionFacts = [
+      { label: "Publication sources", value: 3 },
+      { label: "E-newspapers scraped", value: 500 },
+      { label: "Raw article instances", value: 15000 },
+      { label: "Final instances", value: 10000 },
+    ];
+
+    const biasSubtypes = [
+      { family: "Framing", subtype: "Subjective Intensifiers", count: 2854 },
+      { family: "Framing", subtype: "One-Sided", count: 165 },
+      { family: "Epistemological", subtype: "Assertive Verbs", count: 454 },
+      { family: "Epistemological", subtype: "Entailments", count: 292 },
+      { family: "Epistemological", subtype: "Factive Verbs", count: 76 },
+    ];
+
+    const topUnigrams = [
+      { urdu: "کہا", transliteration: "Kaha (Said)", frequency: 3400 },
+      { urdu: "پاکستان", transliteration: "Pakistan", frequency: 2100 },
+      { urdu: "بھی", transliteration: "Bhi (Also/Too)", frequency: 2050 },
+      { urdu: "پی", transliteration: "P (Part of PTI abbreviation)", frequency: 1850 },
+      { urdu: "آئی", transliteration: "I (Part of PTI abbreviation)", frequency: 1600 },
+      { urdu: "وزیر", transliteration: "Wazir (Minister)", frequency: 1550 },
+      { urdu: "خان", transliteration: "Khan", frequency: 1400 },
+    ];
+
+    const topBigrams = [
+      { urdu: "عمران خان", transliteration: "Imran Khan", frequency: 950 },
+      { urdu: "پی ٹی", transliteration: "P T", frequency: 780 },
+      { urdu: "کرتے ہوئے", transliteration: "Karte Hue", frequency: 680 },
+      { urdu: "انہوں کہا", transliteration: "Unhone Kaha", frequency: 650 },
+      { urdu: "ٹی آئی", transliteration: "T I", frequency: 600 },
+      { urdu: "اسلام آباد", transliteration: "Islamabad", frequency: 550 },
+      { urdu: "اسلام اباد", transliteration: "Islamabad alternate", frequency: 500 },
+    ];
+
+    const bestPipelines = [
+      { category: "Lexical", id: "D", architecture: "TF-IDF + SVM", accuracy: 80.0 },
+      { category: "Embedding", id: "E", architecture: "LaBSE + SVM", accuracy: 83.23 },
+      { category: "Hybrid", id: "I", architecture: "TF-IDF + LaBSE + LR", accuracy: 83.48 },
+      { category: "Neural", id: "R", architecture: "RoBERTa + BiLSTM + SVM", accuracy: 82.22 },
+    ];
+
+    const pipelineScaling = [
+      { id: "A", pipeline: "TF-IDF + NB", smallAccuracy: 73.38, largeAccuracy: 78.59, gain: 5.21 },
+      { id: "B", pipeline: "TF-IDF + LR", smallAccuracy: 73.56, largeAccuracy: 80.43, gain: 6.87 },
+      { id: "C", pipeline: "TF-IDF + RF", smallAccuracy: 72.44, largeAccuracy: 76.17, gain: 3.73 },
+      { id: "D", pipeline: "TF-IDF + SVM", smallAccuracy: 74.06, largeAccuracy: 80.46, gain: 6.4 },
+      { id: "E", pipeline: "LaBSE + SVM", smallAccuracy: 76.38, largeAccuracy: 83.23, gain: 6.85 },
+      { id: "F", pipeline: "LaBSE + LR", smallAccuracy: 76.12, largeAccuracy: 83.21, gain: 7.09 },
+      { id: "G", pipeline: "RoBERTa + SVM", smallAccuracy: 74.94, largeAccuracy: 82.6, gain: 7.66 },
+      { id: "H", pipeline: "RoBERTa + LR", smallAccuracy: 74.94, largeAccuracy: 82.39, gain: 7.45 },
+    ];
+
+    const hybridPipelines = [
+      { id: "I", architecture: "TF-IDF + LaBSE + LR", accuracy: 83.48 },
+      { id: "J", architecture: "TF-IDF + LaBSE + SVM", accuracy: 83.43 },
+      { id: "K", architecture: "TF-IDF + RoBERTa + LR", accuracy: 82.0 },
+      { id: "L", architecture: "TF-IDF + RoBERTa + SVM", accuracy: 82.0 },
+    ];
+
+    const neuralPipelines = [
+      { id: "M", architecture: "RoBERTa + LSTM + LR", accuracy: 81.86 },
+      { id: "N", architecture: "RoBERTa + LSTM + SVM", accuracy: 81.85 },
+      { id: "O", architecture: "LaBSE + LSTM + LR", accuracy: 80.68 },
+      { id: "P", architecture: "LaBSE + LSTM + SVM", accuracy: 80.81 },
+      { id: "Q", architecture: "RoBERTa + BiLSTM + LR", accuracy: 82.18 },
+      { id: "R", architecture: "RoBERTa + BiLSTM + SVM", accuracy: 82.22 },
+      { id: "S", architecture: "LaBSE + BiLSTM + LR", accuracy: 81.26 },
+      { id: "T", architecture: "LaBSE + BiLSTM + SVM", accuracy: 81.56 },
+    ];
+
+    const llmZeroShot = [
+      { model: "Grok", accuracy: 57.92 },
+      { model: "Gemini-3", accuracy: 57.31 },
+      { model: "Claude Sonnet 4.6", accuracy: 56.71 },
+    ];
+
+    const llmFewShot = [
+      { model: "Grok", accuracy: 57.56 },
+      { model: "Gemini-3", accuracy: 55.11 },
+      { model: "Claude Sonnet 4.6", accuracy: 52.89 },
+    ];
+
+    const stopwordResults = [
+      { classifier: "SVM (RBF)", withStopwords: 74.06, withoutStopwords: 72.94 },
+      { classifier: "Logistic Regression", withStopwords: 73.56, withoutStopwords: 72.75 },
+      { classifier: "Naive Bayes", withStopwords: 73.38, withoutStopwords: 72.81 },
+      { classifier: "Random Forest", withStopwords: 72.44, withoutStopwords: 73.0 },
+    ];
+
+    const storySections = [
+      {
+        id: "signal",
+        chapter: "01",
+        kicker: "The Missing Instrument",
+        title: "Urdu news needed a bias detector trained on Urdu evidence.",
+        body: [
+          "The paper starts from a gap: Urdu has datasets for sentiment, fake news, and propaganda, but little direct work on subtle political bias in everyday reporting.",
+          "The researchers define bias as subjective framing, one-sided language, or assumptions presented as fact, then build a domain-specific pipeline around Urdu political journalism instead of relying on generic multilingual judgment."
+        ],
+        metric: { value: "3", label: "major Urdu news sources", detail: "Nawaiwaqt, Daily Jang, and Daily Pakistan anchor the corpus." },
+        source: "Sections 3.3.1, 4.7, and 5.2.5",
+        visual: "signal",
+        accent: "#f7c95f"
+      },
+      {
+        id: "dataset",
+        chapter: "02",
+        kicker: "Building the Corpus",
+        title: "The dataset grew from a small pilot into a 10,000-instance benchmark.",
+        body: [
+          "The team scraped more than 15,000 raw article instances from Urdu e-paper archives, then cleaned, normalized, de-duplicated, labeled, and balanced the corpus.",
+          "The final dataset is not only larger than the previous 1,600-instance version; it is longer, richer, and more diverse, with 282,283 total words and a vocabulary of 20,068 terms."
+        ],
+        metric: { value: "10,000", label: "final instances", detail: "5,159 unbiased and 4,841 biased examples." },
+        source: "Tables 3-1/5-1 and Section 3.3.1",
+        visual: "dataset",
+        accent: "#52d6b3"
+      },
+      {
+        id: "taxonomy",
+        chapter: "03",
+        kicker: "What Counts as Bias",
+        title: "The labels translate abstract media bias into visible Urdu language cues.",
+        body: [
+          "Bias was subdivided into Framing Bias and Epistemological Bias. Framing captures emotionally weighted or one-sided wording; epistemological bias captures verbs and entailments that smuggle certainty or judgment into the sentence.",
+          "Subjective intensifiers dominate the annotated subtype table, which makes the problem especially tied to how political events are described rather than only who is mentioned."
+        ],
+        metric: { value: "2,854", label: "subjective intensifier instances", detail: "The largest reported bias subtype." },
+        source: "Table 3-1 and Table 3-5",
+        visual: "taxonomy",
+        accent: "#ff6b57"
+      },
+      {
+        id: "lexicon",
+        chapter: "04",
+        kicker: "The Language Field",
+        title: "The corpus lives inside Pakistan's political vocabulary.",
+        body: [
+          "The most frequent unigrams and bigrams are not exotic model artifacts. They are everyday news terms: said, Pakistan, minister, government, Imran Khan, PTI, Islamabad, and the Election Commission.",
+          "That matters because a model cannot simply treat political names as bias. It has to separate neutral reporting about powerful actors from subjective framing around those same actors."
+        ],
+        metric: { value: "~3,400", label: "uses of کہا / Kaha", detail: "The top unigram is the ordinary reporting verb 'said'." },
+        source: "Tables 3-2 and 3-3",
+        visual: "lexicon",
+        accent: "#7ac7ff"
+      },
+      {
+        id: "pipelines",
+        chapter: "05",
+        kicker: "The Scaling Effect",
+        title: "More data lifted every foundational pipeline.",
+        body: [
+          "The researchers compared pipelines A-H at two scales: 1,600 and 10,000 instances. Accuracy rose across every listed architecture when the larger corpus was used.",
+          "The biggest reported gain in A-H came from RoBERTa + SVM, while LaBSE and RoBERTa embeddings pushed the best scores beyond the lexical TF-IDF baseline."
+        ],
+        metric: { value: "+7.66", label: "accuracy-point gain", detail: "Pipeline G, RoBERTa + SVM, from 74.94% to 82.60%." },
+        source: "Table 5-7 and Section 5.2.1.1",
+        visual: "pipelines",
+        accent: "#d6f279"
+      },
+      {
+        id: "hybrid",
+        chapter: "06",
+        kicker: "The Winning Fusion",
+        title: "The best model fused what words say with what context means.",
+        body: [
+          "The top architecture was Pipeline I: TF-IDF + LaBSE + Logistic Regression. It concatenated 3,000 lexical dimensions with 768 LaBSE semantic dimensions.",
+          "This hybrid feature space reached 83.48% accuracy with precision, recall, and F1 all reported at 0.83, narrowly edging the LaBSE-only and TF-IDF + LaBSE + SVM variants."
+        ],
+        metric: { value: "83.48%", label: "peak accuracy", detail: "Pipeline I, TF-IDF + LaBSE + Logistic Regression." },
+        source: "Table 5-8 and Section 5.2.5",
+        visual: "hybrid",
+        accent: "#f7c95f"
+      },
+      {
+        id: "llm",
+        chapter: "07",
+        kicker: "The LLM Reality Check",
+        title: "General-purpose LLMs lagged far behind supervised domain training.",
+        body: [
+          "The team benchmarked Grok, Gemini-3, and Claude Sonnet 4.6 on balanced zero-shot and few-shot Urdu bias tests.",
+          "The strongest LLM result was Grok at 57.92% zero-shot accuracy. Few-shot examples did not help; all three models declined, which the paper attributes to narrower learned definitions of bias and Urdu syntactic complexity."
+        ],
+        metric: { value: "25.56", label: "accuracy-point gap", detail: "83.48% supervised hybrid versus 57.92% best zero-shot LLM." },
+        source: "Tables 5-11, 5-12, and Section 5.2.5",
+        visual: "llm",
+        accent: "#b08cff"
+      },
+      {
+        id: "system",
+        chapter: "08",
+        kicker: "From Classifier to Public Tool",
+        title: "The research ends as an explainable web system, not just a score.",
+        body: [
+          "The implementation pairs a FastAPI backend with a Next.js and Tailwind frontend. Users can paste Urdu text or submit a news URL, then receive a binary biased/unbiased verdict with confidence.",
+          "The explainability layer turns model output into an educational interface: a sentence attention map highlights biased and neutral signals, while an LLM service can explain a flagged sentence or propose a neutral rewrite."
+        ],
+        metric: { value: "XAI", label: "sentence attention map", detail: "Red for strong bias, green for strong neutrality." },
+        source: "Sections 4.5.1-4.5.4",
+        visual: "system",
+        accent: "#52d6b3"
+      }
+    ];
+
+    function renderStory() {
+      const wrap = document.getElementById("storyWrap");
+      const nav = document.getElementById("progressNav");
+      wrap.innerHTML = storySections.map(section => `
+        <section id="${section.id}" class="story-step" style="--active-accent:${section.accent}">
+          <article class="story-card">
+            <div class="chapter-row"><span>Chapter ${section.chapter}</span><span></span></div>
+            <p class="kicker">${section.kicker}</p>
+            <h2>${section.title}</h2>
+            <div class="body">${section.body.map(p => `<p>${p}</p>`).join("")}</div>
+            <div class="metric-block">
+              <div><strong>${section.metric.value}</strong><span>${section.metric.label}</span></div>
+              <p>${section.metric.detail}</p>
+            </div>
+            <p class="source">Source: ${section.source}</p>
+          </article>
+        </section>
+      `).join("");
+
+      nav.innerHTML = storySections.map(section => `
+        <a href="#${section.id}" data-section="${section.id}" aria-label="Jump to ${section.title}">
+          <span>${section.kicker}</span>
+          <span class="progress-mark"></span>
+        </a>
+      `).join("");
+    }
+
+    function setActive(section) {
+      document.documentElement.style.setProperty("--active-accent", section.accent);
+      document.getElementById("stickyVisual").style.setProperty("--active-accent", section.accent);
+      document.getElementById("visualTitle").textContent = section.kicker;
+      document.getElementById("visualChapter").textContent = section.chapter;
+      document.getElementById("visualMetric").textContent = section.metric.value;
+      const stage = document.getElementById("visualStage");
+      stage.style.animation = "none";
+      stage.offsetHeight;
+      stage.style.animation = "";
+      stage.innerHTML = renderVisual(section);
+
+      document.querySelectorAll(".story-step").forEach(el => el.classList.toggle("active", el.id === section.id));
+      document.querySelectorAll(".progress-nav a").forEach(link => {
+        const isActive = link.dataset.section === section.id;
+        const mark = link.querySelector(".progress-mark");
+        mark.style.background = isActive ? section.accent : "var(--soft)";
+        mark.style.transform = isActive ? "scaleY(1.35)" : "scaleY(0.72)";
+      });
+    }
+
+    function renderVisual(section) {
+      const map = {
+        signal: signalVisual,
+        dataset: datasetVisual,
+        taxonomy: taxonomyVisual,
+        lexicon: lexiconVisual,
+        pipelines: pipelinesVisual,
+        hybrid: hybridVisual,
+        llm: llmVisual,
+        system: systemVisual
+      };
+      return map[section.visual](section.accent);
+    }
+
+    function signalVisual(accent) {
+      return `<svg viewBox="0 0 100 100" role="img" aria-label="Magnifying lens scanning Urdu text for bias">
+        <style>
+          @keyframes scanline {
+            0%, 100% { transform: translateY(0); opacity: 0.2; }
+            50% { transform: translateY(28px); opacity: 0.85; }
+          }
+          .scanning-line {
+            animation: scanline 3.5s ease-in-out infinite;
+          }
+        </style>
+        <!-- Grid background -->
+        <circle cx="50" cy="48" r="40" fill="none" stroke="var(--soft)" stroke-width="0.4" stroke-dasharray="1 3"></circle>
+        <circle cx="50" cy="48" r="28" fill="none" stroke="var(--soft)" stroke-width="0.4"></circle>
+        
+        <!-- Radial scan lines -->
+        <line x1="50" y1="8" x2="50" y2="88" stroke="var(--soft)" stroke-width="0.3" stroke-dasharray="2 2"></line>
+        <line x1="10" y1="48" x2="90" y2="48" stroke="var(--soft)" stroke-width="0.3" stroke-dasharray="2 2"></line>
+
+        <!-- Urdu Text lines (background) -->
+        <text class="urdu" x="50" y="24" fill="var(--muted)" opacity="0.25" font-size="4.5" text-anchor="middle">قومی اخبارات کی سرگرمیاں</text>
+        <text class="urdu" x="50" y="49" fill="var(--muted)" opacity="0.15" font-size="5" text-anchor="middle">صحافت میں پایا جانے والا تعصب</text>
+        <text class="urdu" x="50" y="72" fill="var(--muted)" opacity="0.25" font-size="4.5" text-anchor="middle">صحافتی اقدار اور غیر جانب داری</text>
+
+        <!-- Glowing background inside lens area -->
+        <circle cx="50" cy="48" r="18" fill="var(--visual)"></circle>
+        <circle cx="50" cy="48" r="18" fill="${accent}" opacity="0.07"></circle>
+
+        <!-- Highlighted text inside the lens -->
+        <text x="50" y="50" fill="${accent}" font-weight="bold" font-size="6.5" text-anchor="middle">Biased</text>
+
+        <!-- Scanning Beam -->
+        <line class="scanning-line" x1="34" y1="34" x2="66" y2="34" stroke="${accent}" stroke-width="0.8" opacity="0.8" style="filter: drop-shadow(0 0 2px ${accent});"></line>
+
+        <!-- The Lens Frame -->
+        <circle cx="50" cy="48" r="18" fill="none" stroke="${accent}" stroke-width="1.2" style="filter: drop-shadow(0 0 3px color-mix(in srgb, ${accent} 40%, transparent));"></circle>
+        <!-- Lens Glare -->
+        <path d="M36 38 A 18 18 0 0 1 48 31" fill="none" stroke="var(--fg)" stroke-opacity="0.4" stroke-width="0.6"></path>
+        
+        <!-- Lens Handle -->
+        <line x1="37.3" y1="60.7" x2="24" y2="74" stroke="${accent}" stroke-width="2.2" stroke-linecap="round"></line>
+        <line x1="35.5" y1="62.5" x2="27" y2="71" stroke="var(--bg)" stroke-width="0.8" stroke-linecap="round"></line>
+
+        <!-- Scanning HUD brackets (Target focus) -->
+        <path d="M 28 35 L 28 29 L 34 29" fill="none" stroke="${accent}" stroke-width="0.6" opacity="0.7"></path>
+        <path d="M 72 35 L 72 29 L 66 29" fill="none" stroke="${accent}" stroke-width="0.6" opacity="0.7"></path>
+        <path d="M 28 61 L 28 67 L 34 67" fill="none" stroke="${accent}" stroke-width="0.6" opacity="0.7"></path>
+        <path d="M 72 61 L 72 67 L 66 67" fill="none" stroke="${accent}" stroke-width="0.6" opacity="0.7"></path>
+
+        <!-- Scan indicator text -->
+        <text x="50" y="88" text-anchor="middle" fill="var(--dim)" font-size="2.6" letter-spacing="0.08em">SCANNING URDU CORPUS FOR EDITORIAL FRAME BIAS</text>
+      </svg>`;
+    }
+
+    function datasetVisual(accent) {
+      const maxInstances = datasetScale[1].instances;
+      return `<div>
+        <div class="grid-2">${datasetScale.map(d => {
+          const h = 18 + (d.instances / maxInstances) * 62;
+          return `<div class="data-card">
+            <div style="height:12rem;display:flex;align-items:end;gap:1rem">
+              <div style="width:4rem;height:${h}%;background:${d.label === "Current dataset" ? `linear-gradient(180deg, ${accent}, rgba(82,214,179,0.25))` : "linear-gradient(180deg, color-mix(in srgb, var(--fg) 46%, transparent), color-mix(in srgb, var(--fg) 12%, transparent))"}"></div>
+              <div><div class="big-number">${fmt.format(d.instances)}</div><div class="tiny-label">${d.label}</div></div>
+            </div>
+            <div class="grid-2" style="margin-top:1rem;font-size:.78rem;color:var(--muted)">
+              <span>Words: ${fmt.format(d.words)}</span><span>Vocab: ${fmt.format(d.vocabulary)}</span><span>Biased: ${fmt.format(d.biased)}</span><span>Unbiased: ${fmt.format(d.unbiased)}</span>
+            </div>
+          </div>`;
+        }).join("")}</div>
+        <div class="grid-4" style="margin-top:1.5rem">${collectionFacts.map(f => `<div style="border-top:1px solid var(--soft);padding-top:.8rem"><div class="big-number" style="font-size:2rem">${f.label.includes("E-newspapers") ? "500+" : fmt.format(f.value)}</div><div class="tiny-label">${f.label}</div></div>`).join("")}</div>
+      </div>`;
+    }
+
+    function taxonomyVisual(accent) {
+      const max = Math.max(...biasSubtypes.map(d => d.count));
+      const pos = [{l:32,t:4},{l:64,t:24},{l:10,t:42},{l:49,t:58},{l:24,t:70}];
+      return `<div>
+        <div style="position:relative;aspect-ratio:1/1;max-width:29rem;margin:0 auto">
+          ${biasSubtypes.map((d, i) => {
+            const size = 24 + (d.count / max) * 54;
+            return `<div style="position:absolute;left:${pos[i].l}%;top:${pos[i].t}%;width:${size}%;height:${size}%;transform:translate(-50%,-50%);display:grid;place-items:center;text-align:center;border:1px solid ${d.family === "Framing" ? accent : "rgba(122,199,255,.65)"};background:color-mix(in srgb,var(--fg) 8%,transparent);padding:.7rem">
+              <strong style="font-family:var(--font-serif);font-size:1.8rem;color:var(--fg)">${fmt.format(d.count)}</strong>
+              <span class="tiny-label">${d.subtype}</span>
+            </div>`;
+          }).join("")}
+        </div>
+        <div class="grid-2 tiny-label" style="max-width:34rem;margin:1rem auto 0"><div style="border-left:2px solid ${accent};padding-left:.8rem">Framing bias</div><div style="border-left:2px solid var(--sky);padding-left:.8rem">Epistemological bias</div></div>
+      </div>`;
+    }
+
+    function lexiconVisual(accent) {
+      const maxUni = topUnigrams[0].frequency;
+      const maxBi = topBigrams[0].frequency;
+      const rows = (data, max, color, wider) => data.map(d => `
+        <div style="display:grid;grid-template-columns:${wider ? "6rem" : "4rem"} 1fr;gap:.8rem;align-items:center;margin:.65rem 0">
+          <span class="urdu" style="font-size:${wider ? "1.25rem" : "1.55rem"};color:var(--fg)">${d.urdu}</span>
+          <div class="bar-bg" style="height:2rem"><div class="bar-grow" style="--bar-width:${(d.frequency / max) * 100}%;height:100%;background:${color};color:var(--ink);display:flex;align-items:center;justify-content:end;padding-right:.5rem;font-size:.65rem;font-weight:900">${fmt.format(d.frequency)}</div></div>
+        </div>`).join("");
+      return `<div class="grid-2">
+        <div><p class="tiny-label">Top unigrams</p>${rows(topUnigrams, maxUni, accent, false)}</div>
+        <div><p class="tiny-label">Top bigrams</p>${rows(topBigrams, maxBi, "var(--fg)", true)}</div>
+      </div>`;
+    }
+
+    function pipelinesVisual(accent) {
+      const max = 85;
+      const bestGain = pipelineScaling.reduce((best, item) => item.gain > best.gain ? item : best, pipelineScaling[0]);
+      return `<div>
+        <div class="data-card" style="margin-bottom:1rem">
+          <div style="display:flex;align-items:end;justify-content:space-between;gap:1rem">
+            <div>
+              <p class="tiny-label">Animated accuracy lift</p>
+              <h3 style="font-size:2rem;line-height:1;margin-top:.45rem">Every A-H pipeline rose after scaling.</h3>
+            </div>
+            <div style="text-align:right">
+              <div class="big-number" style="font-size:3rem;color:${accent}">+${bestGain.gain.toFixed(2)}</div>
+              <div class="tiny-label">${bestGain.id} largest gain</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:.68rem">
+          ${pipelineScaling.map((d, i) => `
+            <div class="row-reveal" style="--delay:${i * 70}ms;display:grid;grid-template-columns:2.2rem 1fr 3.6rem;gap:.75rem;align-items:center">
+              <div style="font-family:var(--font-serif);font-size:1.45rem;font-weight:900;color:var(--fg)">${d.id}</div>
+              <div>
+                <div class="tiny-label" style="display:flex;justify-content:space-between;margin-bottom:.22rem">
+                  <span>${d.pipeline}</span>
+                  <span>${d.smallAccuracy.toFixed(2)} → ${d.largeAccuracy.toFixed(2)}%</span>
+                </div>
+                <div class="bar-bg" style="height:.78rem;margin-bottom:.18rem">
+                  <div class="bar-grow" style="--delay:${180 + i * 80}ms;--bar-width:${(d.smallAccuracy / max) * 100}%;height:100%;background:color-mix(in srgb,var(--fg) 38%,transparent)"></div>
+                </div>
+                <div class="bar-bg" style="height:1.15rem">
+                  <div class="bar-grow" style="--delay:${360 + i * 80}ms;--bar-width:${(d.largeAccuracy / max) * 100}%;height:100%;background:${accent};box-shadow:0 0 22px color-mix(in srgb, ${accent} 38%, transparent)"></div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-weight:900;color:${accent};font-size:.95rem">+${d.gain.toFixed(2)}</div>
+                <div class="tiny-label">pts</div>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+
+        <div class="grid-2 tiny-label" style="margin-top:1rem">
+          <div><span style="display:inline-block;width:1.8rem;height:.5rem;background:color-mix(in srgb,var(--fg) 38%,transparent);margin-right:.45rem"></span>1,600 instances</div>
+          <div style="color:${accent}"><span style="display:inline-block;width:1.8rem;height:.5rem;background:${accent};margin-right:.45rem"></span>10,000 instances</div>
+        </div>
+      </div>`;
+    }
+
+    function hybridVisual(accent) {
+      const lexical = 3000, embedding = 768, total = 3768, top = hybridPipelines[0];
+      return `<div>
+        <div class="grid-2">
+          <div class="data-card"><p class="tiny-label">Feature fusion</p><div style="margin-top:2rem;height:4rem;display:flex;overflow:hidden;background:color-mix(in srgb,var(--fg) 8%,transparent)"><div style="width:${lexical/total*100}%;background:${accent};color:var(--ink);display:grid;place-items:center;font-weight:900;font-size:.72rem">TF-IDF 3,000</div><div style="width:${embedding/total*100}%;background:var(--mint);color:var(--ink);display:grid;place-items:center;font-weight:900;font-size:.72rem">LaBSE 768</div></div><div class="big-number" style="margin-top:1.4rem">${fmt.format(total)}</div><div class="tiny-label">combined feature dimensions</div></div>
+          <div class="data-card"><p class="tiny-label">Peak pipeline</p><div style="margin-top:1rem;aspect-ratio:1/1;border:1px solid var(--soft);display:grid;place-items:center;text-align:center"><div><div style="font-family:var(--font-serif);font-size:5rem;font-weight:900;color:${accent}">${top.id}</div><div style="color:var(--muted)">${top.architecture}</div><div style="font-size:1.7rem;font-weight:900;margin-top:.6rem">${top.accuracy.toFixed(2)}%</div></div></div></div>
+        </div>
+        <div class="grid-4" style="margin-top:1rem">${bestPipelines.map(d => `<div style="border-top:1px solid var(--soft);padding-top:.8rem"><div class="tiny-label">${d.category}</div><div class="big-number" style="font-size:2rem">${d.accuracy.toFixed(2)}%</div></div>`).join("")}</div>
+      </div>`;
+    }
+
+    function llmVisual(accent) {
+      const rows = [{ model: "TF-IDF + LaBSE + LR", accuracy: 83.48, color: "var(--gold)" }, ...llmZeroShot.map(d => ({ ...d, model: `${d.model} zero-shot`, color: accent })), ...llmFewShot.map(d => ({ ...d, model: `${d.model} few-shot`, color: "color-mix(in srgb,var(--fg) 42%,transparent)" }))];
+      return `<div class="data-card"><div style="display:flex;justify-content:space-between;gap:1rem;align-items:end;margin-bottom:1.5rem"><div><p class="tiny-label">Supervised vs prompted</p><h3 style="font-size:2rem">The gap is the finding.</h3></div><div style="text-align:right"><div class="big-number" style="color:${accent}">25.56</div><div class="tiny-label">accuracy points</div></div></div>${rows.map((d, i) => `<div style="display:grid;grid-template-columns:9rem 1fr 4rem;gap:.75rem;align-items:center;margin:.55rem 0;font-size:.75rem"><span style="color:var(--muted);text-transform:uppercase;letter-spacing:.12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.model}</span><div class="bar-bg" style="height:1.2rem"><div class="bar-grow" style="--delay:${i*55}ms;--bar-width:${d.accuracy}%;height:100%;background:${d.color}"></div></div><strong style="text-align:right">${d.accuracy.toFixed(2)}%</strong></div>`).join("")}</div>`;
+    }
+
+    function systemVisual(accent) {
+      const steps = ["Urdu text", "FastAPI", "TF-IDF + LaBSE", "LR classifier", "Attention map", "Explain / rewrite"];
+      return `<div>${steps.map((s, i) => `<div style="display:grid;grid-template-columns:2.8rem 1fr;gap:.8rem;align-items:center;margin:.75rem 0"><div style="height:2.8rem;border:1px solid ${i===3 ? accent : "var(--soft)"};display:grid;place-items:center;font-weight:900;color:${i===3 ? accent : "var(--fg)"}">${i+1}</div><div style="position:relative;overflow:hidden;border:1px solid var(--soft);padding:.9rem 1rem"><div style="position:absolute;inset:0 auto 0 0;width:${18+i*13}%;background:${i===3 ? accent+"33" : "color-mix(in srgb,var(--fg) 6%,transparent)"}"></div><strong style="position:relative;text-transform:uppercase;letter-spacing:.16em;font-size:.8rem">${s}</strong></div></div>`).join("")}<div class="grid-3" style="margin-top:1.5rem">${["Biased / Unbiased", "Confidence", "Sentence scores"].map((d,i) => `<div class="data-card"><div class="big-number" style="font-size:2.2rem;color:${i===1 ? accent : "var(--fg)"}">${i===0 ? "2" : i===1 ? "0-1" : "XAI"}</div><div class="tiny-label">${d}</div></div>`).join("")}</div></div>`;
+    }
+
+    function renderAppendix() {
+      const max = 85;
+      document.getElementById("familyChart").innerHTML = `<div class="chart-title-row"><div><p class="tiny-label">Best by family</p><h3>Hybrid barely wins, but it wins for the right reasons.</h3></div><span class="big-number" style="font-size:2.7rem;color:var(--gold)">83.48%</span></div>${bestPipelines.map((d,i) => `<div style="display:grid;grid-template-columns:5rem 1fr 4.5rem;gap:1rem;align-items:center;margin:1rem 0"><div><div class="big-number" style="font-size:2rem">${d.id}</div><div class="tiny-label">${d.category}</div></div><div class="bar-bg" style="height:2.25rem"><div class="bar-grow" style="--delay:${i*90}ms;--bar-width:${d.accuracy/max*100}%;height:100%;background:${d.category==="Hybrid" ? "var(--gold)" : "color-mix(in srgb,var(--fg) 56%,transparent)"};display:flex;align-items:center;justify-content:end;padding-right:.75rem;color:var(--ink);font-size:.72rem;font-weight:900">${d.architecture}</div></div><strong class="right">${d.accuracy.toFixed(2)}%</strong></div>`).join("")}`;
+
+      const subtypeMax = Math.max(...biasSubtypes.map(d => d.count));
+      document.getElementById("subtypeTable").innerHTML = `<p class="tiny-label">Annotated bias signals</p><h3>Subtype distribution</h3><div class="data-table"><div class="table-head" style="grid-template-columns:1fr .55fr .55fr"><span>Subtype</span><span>Family</span><span class="right">Count</span></div>${biasSubtypes.map((d,i) => `<div class="table-row row-reveal" style="--delay:${i*75}ms;grid-template-columns:1fr .55fr .55fr"><div><strong>${d.subtype}</strong><div class="bar-bg" style="height:.45rem;margin-top:.55rem"><div class="bar-grow" style="--delay:${i*90}ms;--bar-width:${d.count/subtypeMax*100}%;height:100%;background:${d.family==="Framing" ? "var(--coral)" : "var(--sky)"}"></div></div></div><span>${d.family}</span><strong class="right">${fmt.format(d.count)}</strong></div>`).join("")}</div>`;
+
+      document.getElementById("neuralChart").innerHTML = `<div class="chart-title-row"><div><p class="tiny-label">Neural variants</p><h3>BiLSTM improved context, not enough to beat hybrid fusion.</h3></div><span class="big-number" style="font-size:2.7rem;color:var(--mint)">82.22%</span></div><div class="grid-4">${neuralPipelines.map((d,i) => `<div><div class="bar-bg" style="height:14rem;display:flex;align-items:end"><div class="bar-grow" style="--delay:${i*65}ms;--bar-width:100%;height:${d.accuracy/83*100}%;background:${d.id==="R" ? "var(--mint)" : "color-mix(in srgb,var(--fg) 44%,transparent)"}"></div></div><div style="text-align:center;margin-top:.55rem"><div class="big-number" style="font-size:1.7rem">${d.id}</div><div class="tiny-label">${d.accuracy.toFixed(2)}%</div></div></div>`).join("")}</div>`;
+
+      document.getElementById("stopwordTable").innerHTML = `<p class="tiny-label">Stopword experiment</p><h3>Removing Urdu stopwords usually hurt accuracy.</h3><div class="data-table"><div class="table-head" style="grid-template-columns:1fr .65fr .65fr .65fr"><span>Classifier</span><span class="right">With</span><span class="right">Without</span><span class="right">Effect</span></div>${stopwordResults.map((d,i) => { const delta = d.withoutStopwords - d.withStopwords; return `<div class="table-row row-reveal" style="--delay:${i*85}ms;grid-template-columns:1fr .65fr .65fr .65fr"><strong>${d.classifier}</strong><span class="right">${d.withStopwords.toFixed(2)}%</span><span class="right">${d.withoutStopwords.toFixed(2)}%</span><strong class="right" style="color:${delta >= 0 ? "var(--mint)" : "var(--coral)"}">${delta >= 0 ? "+" : ""}${delta.toFixed(2)}</strong></div>`; }).join("")}</div>`;
+    }
+
+    function setupObserver() {
+      const nodes = storySections.map(s => document.getElementById(s.id)).filter(Boolean);
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible) setActive(storySections.find(s => s.id === visible.target.id) || storySections[0]);
+      }, { rootMargin: "-28% 0px -48% 0px", threshold: [0.12, 0.24, 0.36, 0.48, 0.6] });
+      nodes.forEach(node => observer.observe(node));
+    }
+
+    document.getElementById("themeToggle").addEventListener("click", () => {
+      document.body.classList.toggle("light");
+      const isLight = document.body.classList.contains("light");
+      document.getElementById("themeLabel").textContent = isLight ? "White" : "Black";
+      document.getElementById("themeToggle").setAttribute("aria-label", `Switch to ${isLight ? "black" : "white"} theme`);
+    });
+
+    renderStory();
+    renderAppendix();
+    setActive(storySections[0]);
+    setupObserver();
+  </script>
+</body>
+</html>

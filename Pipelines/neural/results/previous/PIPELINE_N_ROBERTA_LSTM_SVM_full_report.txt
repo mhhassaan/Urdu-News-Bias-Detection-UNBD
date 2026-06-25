@@ -1,0 +1,23 @@
+===== PIPELINE_N_ROBERTA_LSTM_SVM =====
+
+Total Features: 256
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10]}
+
+Best Parameters:
+C: 0.01
+
+Best CV F1 (macro): 0.9180
+CV Accuracy: 0.8185
+Final Accuracy (5-Fold CV): 0.8185
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.83      0.82      0.82      5159
+      Biased       0.81      0.82      0.81      4841
+
+    accuracy                           0.82     10000
+   macro avg       0.82      0.82      0.82     10000
+weighted avg       0.82      0.82      0.82     10000

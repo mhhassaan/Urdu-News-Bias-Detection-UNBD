@@ -1,0 +1,23 @@
+===== PIPELINE_G_ROBERTA_SVM =====
+
+Loading saved RoBERTa embeddings...
+Embedding Shape: (10000, 768)
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10]}
+Best Parameters:
+C: 10
+
+Best CV F1 (macro): 0.8256
+CV Accuracy: 0.8260
+Final Accuracy (5-Fold CV): 0.8260
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.82      0.85      0.83      5159
+      Biased       0.83      0.80      0.82      4841
+
+    accuracy                           0.83     10000
+   macro avg       0.83      0.83      0.83     10000
+weighted avg       0.83      0.83      0.83     10000

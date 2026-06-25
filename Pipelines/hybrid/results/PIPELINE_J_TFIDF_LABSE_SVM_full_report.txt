@@ -1,0 +1,23 @@
+===== PIPELINE_J_TFIDF_LABSE_SVM =====
+
+Total Features: 3768
+
+Parameter Grid:
+{'C': [0.01, 0.1, 1, 10]}
+
+Best Parameters:
+C: 0.01
+
+Best CV F1 (macro): 0.8277
+CV Accuracy: 0.8343
+Final Accuracy (5-Fold CV): 0.8343
+
+Classification Report:
+              precision    recall  f1-score   support
+
+    Unbiased       0.83      0.85      0.84      5159
+      Biased       0.84      0.82      0.83      4841
+
+    accuracy                           0.83     10000
+   macro avg       0.83      0.83      0.83     10000
+weighted avg       0.83      0.83      0.83     10000

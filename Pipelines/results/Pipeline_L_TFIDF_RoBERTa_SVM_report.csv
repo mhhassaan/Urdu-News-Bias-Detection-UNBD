@@ -1,0 +1,22 @@
+,precision,recall,f1-score,support
+0,0.7752150117279124,0.7687536344252762,0.771970802919708,5159.0
+1,0.7557330057330057,0.7624457756661847,0.7590745501285348,4841.0
+accuracy,0.7657,0.7657,0.7657,0.7657
+macro avg,0.765474008730459,0.7655997050457304,0.7655226765241214,10000.0
+weighted avg,0.7657837726257781,0.7657,0.7657277269435011,10000.0
+
+📊 Pipeline_L_TFIDF_RoBERTa_SVM DONE | Acc=0.7657 | Time=20.85 min
+
+Best Parameters:
+{'C': 0.01}
+
+Classification Report:
+
+              precision    recall  f1-score   support
+
+      Biased       0.78      0.77      0.77      5159
+    Unbiased       0.76      0.76      0.76      4841
+
+    accuracy                           0.77     10000
+   macro avg       0.77      0.77      0.77     10000
+weighted avg       0.77      0.77      0.77     10000
