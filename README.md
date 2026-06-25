@@ -139,8 +139,6 @@ UNBDapp/
 │   ├── tailwind.config.ts          # Tailwind styling definitions
 │   └── tsconfig.json               # TypeScript configurations
 ├── train_final_model.py            # Re-evaluation and model training builder script
-├── devlog.md                       # Log of features, adjustments, and modifications
-├── GEMINI.md                       # High-level architecture instruction checklist
 └── urdu-bias-scrollytelling-single.html # Interactive scrollytelling learning walkthrough
 ```
 
